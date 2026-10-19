@@ -28,8 +28,9 @@ jobs:
       - name: Report build errors
         if: failure()
         run: |
-          grep -nE "error:|FAILURE|What went wrong|Exception|symbol:|location:|\.java:[0-9]+" build.log \
-            | head -60 | while IFS= read -r line; do echo "::error::${line}"; done
+          { grep -nE "error:|symbol:|location:|\.java:[0-9]+" build.log | head -40;
+            grep -n -A 25 "What went wrong" build.log | head -60; } \
+            | while IFS= read -r line; do echo "::error::${line}"; done
 
       # Le .jar du mod est téléchargeable depuis l'onglet Actions > ce run > Artifacts
       - name: Upload mod jar
