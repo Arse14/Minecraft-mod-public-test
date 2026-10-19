@@ -1,6 +1,7 @@
 # Metadonnees de chargement du mod (format TOML).
-# Les valeurs ${...} sont remplacees depuis gradle.properties au moment du build.
-# NB : pas d'accents dans ce fichier, il passe par un moteur de template Groovy.
+# Les valeurs entre accolades sont remplacees depuis gradle.properties au moment du build.
+# NB : ce fichier passe par un moteur de template Groovy, ne jamais ecrire de dollar-accolade
+# en dehors d'un vrai nom de propriete.
 
 modLoader="javafml" #obligatoire
 loaderVersion="${loader_version_range}" #obligatoire
