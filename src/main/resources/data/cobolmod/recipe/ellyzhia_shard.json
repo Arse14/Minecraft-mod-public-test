@@ -1,0 +1,6 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [ { "item": "minecraft:amethyst_shard" }, { "item": "minecraft:lapis_lazuli" } ],
+  "result": { "id": "cobolmod:ellyzhia_shard", "count": 2 }
+}

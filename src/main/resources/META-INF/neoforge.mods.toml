@@ -1,0 +1,34 @@
+# Métadonnées de chargement du mod (format TOML).
+# Les valeurs ${...} sont remplacées depuis gradle.properties au moment du build.
+
+modLoader="javafml" #obligatoire
+loaderVersion="${loader_version_range}" #obligatoire
+license="${mod_license}"
+issueTrackerURL="https://github.com/quentinleduc1-netizen/Minecraft-mod-public-test/issues" #optionnel
+
+[[mods]] #obligatoire
+modId="${mod_id}" #obligatoire
+version="${mod_version}" #obligatoire
+displayName="${mod_name}" #obligatoire
+displayURL="https://github.com/quentinleduc1-netizen/Minecraft-mod-public-test" #optionnel
+#logoFile="cobolmod.png" #optionnel
+authors="quentinleduc1-netizen"
+description='''
+Ellyzhia — mod NeoForge pour Minecraft 1.21.1.
+'''
+
+# Dépendance : NeoForge
+[[dependencies.${mod_id}]]
+    modId="neoforge"
+    type="required"
+    versionRange="[${neo_version},)"
+    ordering="NONE"
+    side="BOTH"
+
+# Dépendance : Minecraft
+[[dependencies.${mod_id}]]
+    modId="minecraft"
+    type="required"
+    versionRange="${minecraft_version_range}"
+    ordering="NONE"
+    side="BOTH"

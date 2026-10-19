@@ -1,0 +1,10 @@
+{
+  "itemGroup.cobolmod.ellyzhia_tab": "Ellyzhia",
+  "item.cobolmod.ellyzhia_shard": "Ellyzhia Shard",
+  "block.cobolmod.ellyzhia_block": "Ellyzhia Block",
+
+  "cobolmod.configuration.title": "Ellyzhia Configuration",
+  "cobolmod.configuration.section.cobolmod.common.toml": "Common options",
+  "cobolmod.configuration.section.cobolmod.common.toml.title": "Common options",
+  "cobolmod.configuration.debugLogs": "Debug logs"
+}

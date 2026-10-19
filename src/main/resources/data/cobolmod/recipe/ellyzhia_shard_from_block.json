@@ -1,0 +1,6 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [ { "item": "cobolmod:ellyzhia_block" } ],
+  "result": { "id": "cobolmod:ellyzhia_shard", "count": 9 }
+}

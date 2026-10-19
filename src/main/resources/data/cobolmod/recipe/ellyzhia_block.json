@@ -1,0 +1,7 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [ "###", "###", "###" ],
+  "key": { "#": { "item": "cobolmod:ellyzhia_shard" } },
+  "result": { "id": "cobolmod:ellyzhia_block", "count": 1 }
+}
