@@ -33,6 +33,10 @@ Le monde de test est créé dans `run/client/`.
   - **Bloc d'Ellyzhia** (`cobolmod:ellyzhia_block`) — émet de la lumière, se mine à la pioche en pierre minimum.
 - Recettes : `améthyste + lapis` → 2 éclats ; 9 éclats ↔ 1 bloc.
 - Commande : `/give @s cobolmod:ellyzhia_shard`
+- **Touche `U`** : ouvre l'écran des raids (design « Pokédex moderne »). Liste des raids à gauche,
+  fiche à droite, boutons *Rejoindre* / *Se téléporter*. L'onglet **Admin** (difficulté, public/privé)
+  n'apparaît que pour les opérateurs (`/op`, ou monde solo avec les commandes activées).
+  Les raids sont pour l'instant des données factices.
 
 ## Construire le `.jar`
 
@@ -49,6 +53,13 @@ src/main/java/com/ellyzhia/cobolmod/
 ├── CobolMod.java            # point d'entrée (@Mod), enregistre les registres
 ├── CobolModClient.java      # code client uniquement (écrans, rendus, touches)
 ├── Config.java              # options de config (config/cobolmod-common.toml)
+├── client/
+│   ├── ModKeyBindings.java  # touche U -> ouvre RaidScreen
+│   └── RaidScreen.java      # écran des raids (Pokédex moderne)
+├── raid/
+│   ├── RaidInfo.java        # description d'un raid
+│   ├── RaidDifficulty.java  # niveaux de difficulté
+│   └── RaidRegistry.java    # liste des raids (factice pour l'instant)
 └── registry/
     ├── ModItems.java        # tous les items
     ├── ModBlocks.java       # tous les blocs
