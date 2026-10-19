@@ -143,6 +143,7 @@ tasks.withType(ProcessResources).configureEach {
             mod_version            : mod_version,
     ]
     inputs.properties replaceProperties
+    filteringCharset = 'UTF-8'
 
     filesMatching(['META-INF/neoforge.mods.toml']) {
         expand replaceProperties
