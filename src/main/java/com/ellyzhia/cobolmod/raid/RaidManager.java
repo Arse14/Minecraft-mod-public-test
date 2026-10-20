@@ -4,6 +4,7 @@ import com.ellyzhia.cobolmod.CobolMod;
 import com.ellyzhia.cobolmod.network.RaidSyncPayload;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -29,7 +30,7 @@ public final class RaidManager {
 
     private RaidManager() {}
 
-    private static Component prefix() {
+    private static MutableComponent prefix() {
         return Component.literal("[Raids] ").withStyle(ChatFormatting.RED);
     }
 
