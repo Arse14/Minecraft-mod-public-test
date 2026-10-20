@@ -119,9 +119,13 @@ public class RaidScreen extends Screen {
     private void buildWidgets() {
         clearWidgets();
 
-        // Onglets dans le bandeau, à droite
-        int tabW = 50, tabY = panelY + 4, tabH = HEADER_H - 8;
-        int tabX = panelX + panelW - PAD - tabW;
+        // Bouton fermer tout à droite du bandeau, puis les onglets à sa gauche
+        int tabY = panelY + 4, tabH = HEADER_H - 8;
+        int closeW = 16;
+        addRenderableWidget(Button.builder(Component.literal("✕"), b -> onClose())
+                .bounds(panelX + panelW - PAD - closeW, tabY, closeW, tabH).build());
+        int tabW = 50;
+        int tabX = panelX + panelW - PAD - closeW - 6 - tabW;
         if (isAdmin()) {
             Button admin = addRenderableWidget(Button.builder(Component.translatable("screen.cobolmod.raids.tab.admin"),
                     b -> switchTab(Tab.ADMIN)).bounds(tabX, tabY, tabW, tabH).build());
