@@ -33,10 +33,16 @@ Le monde de test est créé dans `run/client/`.
   - **Bloc d'Ellyzhia** (`cobolmod:ellyzhia_block`) — émet de la lumière, se mine à la pioche en pierre minimum.
 - Recettes : `améthyste + lapis` → 2 éclats ; 9 éclats ↔ 1 bloc.
 - Commande : `/give @s cobolmod:ellyzhia_shard`
-- **Touche `U`** : ouvre l'écran des raids (design « Pokédex moderne »). Liste des raids à gauche,
-  fiche à droite, boutons *Rejoindre* / *Se téléporter*. L'onglet **Admin** (difficulté, public/privé)
-  n'apparaît que pour les opérateurs (`/op`, ou monde solo avec les commandes activées).
-  Les raids sont pour l'instant des données factices.
+- **Touche `U`** : ouvre l'écran des raids (design « Pokédex moderne »).
+  - Gauche : les types de raid, avec une pastille d'état (gris = fermé, vert = ouvert, orange = ready check, rouge = en cours/complet).
+  - Droite : grande image du boss, **badge de difficulté cliquable** (change la difficulté avant d'ouvrir),
+    état, équipe, boutons.
+  - **Ouvrir le raid** crée l'instance (vous en êtes le chef) ; les autres joueurs voient alors **Rejoindre**.
+  - **Se téléporter** (chef uniquement) lance un **ready check** : chaque membre reçoit une fenêtre Prêt / Pas prêt ;
+    quand tout le monde est prêt l'équipe entière est téléportée à l'arène. Un refus ou 30 s sans réponse annule.
+  - Onglet **Admin** (opérateurs) : changer la difficulté d'une instance (clic sur le badge), public/privé, fermer.
+  - Les positions d'arène et les boss sont dans `RaidTypes.java` ; les images de boss dans `textures/gui/boss/`
+    (placeholders en attendant les sprites Cobblemon).
 
 ## Construire le `.jar`
 
@@ -55,11 +61,19 @@ src/main/java/com/ellyzhia/cobolmod/
 ├── Config.java              # options de config (config/cobolmod-common.toml)
 ├── client/
 │   ├── ModKeyBindings.java  # touche U -> ouvre RaidScreen
-│   └── RaidScreen.java      # écran des raids (Pokédex moderne)
+│   ├── RaidScreen.java      # écran des raids (Pokédex moderne)
+│   ├── ReadyCheckScreen.java# fenêtre Prêt / Pas prêt
+│   └── ClientRaidState.java # copie client de l'état des raids
+├── network/
+│   ├── ModNetwork.java      # enregistrement des paquets
+│   ├── RaidSyncPayload.java # serveur -> client : état des raids
+│   └── RaidActionPayload.java # client -> serveur : ouvrir, rejoindre, ready...
 ├── raid/
-│   ├── RaidInfo.java        # description d'un raid
+│   ├── RaidType(s).java     # catalogue des raids (boss, niveau, arène)
+│   ├── RaidInstance.java    # instance ouverte : chef, équipe, état
 │   ├── RaidDifficulty.java  # niveaux de difficulté
-│   └── RaidRegistry.java    # liste des raids (factice pour l'instant)
+│   ├── RaidManager.java     # règles côté serveur
+│   └── RaidServerEvents.java# connexion / tick / arrêt
 └── registry/
     ├── ModItems.java        # tous les items
     ├── ModBlocks.java       # tous les blocs
