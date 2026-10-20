@@ -35,9 +35,9 @@ Le monde de test est créé dans `run/client/`.
 - Commande : `/give @s cobolmod:ellyzhia_shard`
 - **Touche `U`** : ouvre l'écran des raids (design « Pokédex moderne »).
   - Gauche : les types de raid, avec une pastille d'état (gris = fermé, vert = ouvert, orange = ready check, rouge = en cours/complet).
-  - Droite : grande image du boss, **badge de difficulté cliquable** (change la difficulté avant d'ouvrir),
+  - Droite : grande bannière du boss, **badge de difficulté cliquable** (change la difficulté avant d'ouvrir),
     état, équipe, boutons.
-  - **Ouvrir le raid** crée l'instance (vous en êtes le chef) ; les autres joueurs voient alors **Rejoindre**.
+  - **Créer** crée l'instance (vous en êtes le chef) ; les autres joueurs voient alors **Rejoindre**.
   - **Se téléporter** (chef uniquement) lance un **ready check** : chaque membre reçoit une fenêtre Prêt / Pas prêt ;
     quand tout le monde est prêt l'équipe entière est téléportée à l'arène. Un refus ou 30 s sans réponse annule.
   - Onglet **Admin** (opérateurs) : changer la difficulté d'une instance (clic sur le badge), public/privé, fermer.

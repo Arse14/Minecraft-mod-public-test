@@ -13,19 +13,16 @@ import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.FormattedCharSequence;
 import net.neoforged.neoforge.network.PacketDistributor;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 /**
- * Écran des raids, design "Pokédex moderne".
- * <p>
- * Gauche : liste des types de raid (avec l'état de l'instance s'il y en a une).
- * Droite : grande image du boss, badge de difficulté cliquable, équipe, actions.
- * Onglet Admin pour les opérateurs.
+ * Écran des raids — version épurée :
+ * bandeau rouge, liste des raids à gauche, fiche à droite avec le nom,
+ * le boss, un badge de difficulté en haut à droite, une grande bannière
+ * du boss, une ligne d'état/équipe et deux boutons.
  * <p>
  * Ouvert avec la touche U (voir {@link ModKeyBindings}).
  */
@@ -40,31 +37,31 @@ public class RaidScreen extends Screen {
     private static final int ROW_SELECTED = 0xFF34405E;
     private static final int TEXT = 0xFFECEFF4;
     private static final int TEXT_DIM = 0xFF9AA3B5;
+    private static final int TEAL = 0xFF4DD0C4;
     private static final int BORDER = 0xFF3A4660;
+    private static final int SEPARATOR = 0xFF3F4A78;
     private static final int GREEN = 0xFF66BB6A;
     private static final int ORANGE = 0xFFFFA726;
     private static final int RED = 0xFFEF5350;
 
-    // --- Géométrie ---
-    private static final int HEADER_H = 22;
-    private static final int LIST_W = 120;
-    private static final int ROW_H = 24;
+    // --- Géométrie (unités GUI) ---
+    private static final int HEADER_H = 24;
+    private static final int LIST_W = 136;
+    private static final int ROW_H = 30;
     private static final int PAD = 8;
-    private static final int IMG_SIZE = 96;
     private static final int BTN_H = 20;
+    private static final int BANNER_TEX_W = 256, BANNER_TEX_H = 96;
 
     private enum Tab { RAIDS, ADMIN }
 
     private Tab tab = Tab.RAIDS;
     private int selected = 0;
-    /** Difficulté choisie pour l'ouverture (quand aucune instance n'existe). */
     private RaidDifficulty chosenDifficulty = RaidDifficulty.NORMAL;
     private boolean chosenPublic = true;
 
     private int panelX, panelY, panelW, panelH;
     private int listX, listY, listW, listH;
     private int cardX, cardY, cardW, cardH;
-    /** Rectangle du badge de difficulté (cliquable). */
     private int badgeX, badgeY, badgeW, badgeH;
 
     public RaidScreen() {
@@ -75,8 +72,8 @@ public class RaidScreen extends Screen {
 
     @Override
     protected void init() {
-        panelW = Math.min(width - 24, 440);
-        panelH = Math.min(height - 24, 250);
+        panelW = Math.min(width - 20, 470);
+        panelH = Math.min(height - 20, 256);
         panelX = (width - panelW) / 2;
         panelY = (height - panelH) / 2;
 
@@ -119,32 +116,28 @@ public class RaidScreen extends Screen {
         PacketDistributor.sendToServer(RaidActionPayload.of(action, typeId));
     }
 
-    /** (Re)crée tous les boutons selon l'onglet courant, le raid sélectionné et son état. */
     private void buildWidgets() {
         clearWidgets();
 
-        // --- En-tête : fermer + onglets ---
-        addRenderableWidget(Button.builder(Component.literal("✕"), b -> onClose())
-                .bounds(panelX + 4, panelY + 3, 16, HEADER_H - 6).build());
-
-        int tabW = 52, tabY = panelY + 3;
+        // Onglets dans le bandeau, à droite
+        int tabW = 50, tabY = panelY + 4, tabH = HEADER_H - 8;
         int tabX = panelX + panelW - PAD - tabW;
         if (isAdmin()) {
             Button admin = addRenderableWidget(Button.builder(Component.translatable("screen.cobolmod.raids.tab.admin"),
-                    b -> switchTab(Tab.ADMIN)).bounds(tabX, tabY, tabW, HEADER_H - 6).build());
+                    b -> switchTab(Tab.ADMIN)).bounds(tabX, tabY, tabW, tabH).build());
             admin.active = tab != Tab.ADMIN;
             tabX -= tabW + 4;
         } else if (tab == Tab.ADMIN) {
             tab = Tab.RAIDS;
         }
         Button raids = addRenderableWidget(Button.builder(Component.translatable("screen.cobolmod.raids.tab.raids"),
-                b -> switchTab(Tab.RAIDS)).bounds(tabX, tabY, tabW, HEADER_H - 6).build());
+                b -> switchTab(Tab.RAIDS)).bounds(tabX, tabY, tabW, tabH).build());
         raids.active = tab != Tab.RAIDS;
 
-        // --- Boutons d'action, en bas de la fiche ---
+        // Deux boutons en bas de la fiche
         int btnY = cardY + cardH - PAD - BTN_H;
-        int btnW = (cardW - 2 * PAD - 6) / 2;
-        int b1 = cardX + PAD, b2 = b1 + btnW + 6;
+        int btnW = (cardW - 2 * PAD - 10) / 2;
+        int b1 = cardX + PAD, b2 = b1 + btnW + 10;
 
         RaidType type = currentType();
         Optional<RaidInstance> inst = currentInstance();
@@ -157,17 +150,16 @@ public class RaidScreen extends Screen {
         }
 
         if (inst.isEmpty()) {
-            // Aucune instance : on peut en ouvrir une (sauf si déjà dans un autre raid)
-            Button open = addRenderableWidget(Button.builder(Component.translatable("screen.cobolmod.raids.open"),
-                    b -> openRaid()).bounds(b1, btnY, btnW, BTN_H).build());
+            Button create = addRenderableWidget(Button.builder(Component.translatable("screen.cobolmod.raids.create"),
+                    b -> createRaid()).bounds(b2, btnY, btnW, BTN_H).build());
             if (myRaid.isPresent()) {
-                open.active = false;
-                open.setTooltip(Tooltip.create(Component.translatable("screen.cobolmod.raids.already_in_raid")));
+                create.active = false;
+                create.setTooltip(Tooltip.create(Component.translatable("screen.cobolmod.raids.already_in_raid")));
             }
             Button vis = addRenderableWidget(Button.builder(visibilityChoiceLabel(), b -> {
                 chosenPublic = !chosenPublic;
                 b.setMessage(visibilityChoiceLabel());
-            }).bounds(b2, btnY, btnW, BTN_H).build());
+            }).bounds(b1, btnY, btnW, BTN_H).build());
             vis.setTooltip(Tooltip.create(Component.translatable("screen.cobolmod.raids.visibility.tip")));
             return;
         }
@@ -192,10 +184,13 @@ public class RaidScreen extends Screen {
                 join.active = false;
                 join.setTooltip(Tooltip.create(Component.translatable("screen.cobolmod.raids.already_in_raid")));
             }
+            Button create = addRenderableWidget(Button.builder(Component.translatable("screen.cobolmod.raids.create"),
+                    b -> {}).bounds(b2, btnY, btnW, BTN_H).build());
+            create.active = false;
+            create.setTooltip(Tooltip.create(Component.translatable("screen.cobolmod.raids.already_open")));
             return;
         }
 
-        // Membre de ce raid
         if (leader) {
             Button tp = addRenderableWidget(Button.builder(Component.translatable("screen.cobolmod.raids.teleport"),
                     b -> send(Action.REQUEST_TELEPORT, type.id())).bounds(b1, btnY, btnW, BTN_H).build());
@@ -203,26 +198,24 @@ public class RaidScreen extends Screen {
             tp.active = raid.state() == RaidInstance.State.OPEN;
             addRenderableWidget(Button.builder(Component.translatable("screen.cobolmod.raids.disband"),
                     b -> send(Action.LEAVE, type.id())).bounds(b2, btnY, btnW, BTN_H).build());
+        } else if (raid.state() == RaidInstance.State.READY_CHECK && !raid.isReady(me)) {
+            addRenderableWidget(Button.builder(Component.translatable("screen.cobolmod.ready.yes"),
+                    b -> answerReady(type.id(), true)).bounds(b1, btnY, btnW, BTN_H).build());
+            addRenderableWidget(Button.builder(Component.translatable("screen.cobolmod.ready.no"),
+                    b -> answerReady(type.id(), false)).bounds(b2, btnY, btnW, BTN_H).build());
         } else {
-            if (raid.state() == RaidInstance.State.READY_CHECK && !raid.isReady(me)) {
-                addRenderableWidget(Button.builder(Component.translatable("screen.cobolmod.ready.yes"),
-                        b -> answerReady(type.id(), true)).bounds(b1, btnY, btnW, BTN_H).build());
-                addRenderableWidget(Button.builder(Component.translatable("screen.cobolmod.ready.no"),
-                        b -> answerReady(type.id(), false)).bounds(b2, btnY, btnW, BTN_H).build());
-            } else {
-                Button wait = addRenderableWidget(Button.builder(Component.translatable("screen.cobolmod.raids.waiting_leader"),
-                        b -> {}).bounds(b1, btnY, btnW, BTN_H).build());
-                wait.active = false;
-                addRenderableWidget(Button.builder(Component.translatable("screen.cobolmod.raids.leave"),
-                        b -> send(Action.LEAVE, type.id())).bounds(b2, btnY, btnW, BTN_H).build());
-            }
+            Button wait = addRenderableWidget(Button.builder(Component.translatable("screen.cobolmod.raids.waiting_leader"),
+                    b -> {}).bounds(b1, btnY, btnW, BTN_H).build());
+            wait.active = false;
+            addRenderableWidget(Button.builder(Component.translatable("screen.cobolmod.raids.leave"),
+                    b -> send(Action.LEAVE, type.id())).bounds(b2, btnY, btnW, BTN_H).build());
         }
     }
 
     private void buildAdminButtons(RaidType type, Optional<RaidInstance> inst, int b1, int b2, int btnW, int btnY) {
         if (inst.isEmpty()) {
             Button none = addRenderableWidget(Button.builder(Component.translatable("screen.cobolmod.raids.admin.no_instance"),
-                    b -> {}).bounds(b1, btnY, btnW * 2 + 6, BTN_H).build());
+                    b -> {}).bounds(b1, btnY, btnW * 2 + 10, BTN_H).build());
             none.active = false;
             return;
         }
@@ -249,7 +242,7 @@ public class RaidScreen extends Screen {
 
     // --------------------------------------------------------------- actions
 
-    private void openRaid() {
+    private void createRaid() {
         PacketDistributor.sendToServer(new RaidActionPayload(Action.OPEN, currentType().id(),
                 chosenDifficulty.ordinal(), chosenPublic));
     }
@@ -258,7 +251,6 @@ public class RaidScreen extends Screen {
         PacketDistributor.sendToServer(new RaidActionPayload(Action.READY_ANSWER, typeId, ready ? 1 : 0, false));
     }
 
-    /** Clic sur le badge de difficulté : avant ouverture on cycle le choix ; en admin on change l'instance. */
     private void onDifficultyClicked() {
         Optional<RaidInstance> inst = currentInstance();
         if (inst.isEmpty()) {
@@ -320,17 +312,12 @@ public class RaidScreen extends Screen {
     public void renderBackground(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         super.renderBackground(g, mouseX, mouseY, partialTick);
 
+        // Panneau + bandeau rouge
         g.fill(panelX - 1, panelY - 1, panelX + panelW + 1, panelY + panelH + 1, BORDER);
         g.fill(panelX, panelY, panelX + panelW, panelY + panelH, BG_PANEL);
-
-        // En-tête rouge style Pokédex + diode bleue
         g.fill(panelX, panelY, panelX + panelW, panelY + HEADER_H, ACCENT);
-        g.fill(panelX, panelY + HEADER_H - 2, panelX + panelW, panelY + HEADER_H, ACCENT_DARK);
-        int ledX = panelX + 26, ledY = panelY + HEADER_H / 2;
-        g.fill(ledX - 4, ledY - 4, ledX + 4, ledY + 4, 0xFF0D47A1);
-        g.fill(ledX - 3, ledY - 3, ledX + 3, ledY + 3, 0xFF42A5F5);
-        g.fill(ledX - 2, ledY - 3, ledX, ledY - 1, 0xFFBBDEFB);
-        g.drawString(font, title, ledX + 8, panelY + (HEADER_H - 8) / 2, TEXT, true);
+        g.fill(panelX, panelY + HEADER_H - 3, panelX + panelW, panelY + HEADER_H, ACCENT_DARK);
+        g.drawString(font, title, panelX + PAD, panelY + (HEADER_H - 8) / 2 - 1, TEXT, true);
 
         g.fill(listX, listY, listX + listW, listY + listH, BG_LIST);
         renderList(g, mouseX, mouseY);
@@ -350,25 +337,23 @@ public class RaidScreen extends Screen {
             boolean hovered = hoverInList && mouseY >= rowY && mouseY < rowY + ROW_H;
             if (i == selected) {
                 g.fill(listX, rowY, listX + listW, rowY + ROW_H, ROW_SELECTED);
-                g.fill(listX, rowY, listX + 3, rowY + ROW_H, ACCENT);
+                g.fill(listX, rowY, listX + 4, rowY + ROW_H, ACCENT);
             } else if (hovered) {
                 g.fill(listX, rowY, listX + listW, rowY + ROW_H, ROW_HOVER);
             }
 
-            // Pastille d'état : gris = fermé, vert = ouvert, orange = ready check, rouge = en cours
-            int dotColor = inst.map(r -> switch (r.state()) {
-                case OPEN -> r.isFull() ? RED : GREEN;
-                case READY_CHECK -> ORANGE;
-                case IN_PROGRESS -> RED;
-            }).orElse(0xFF5A6478);
-            int dotX = listX + 10, dotY = rowY + ROW_H / 2;
-            g.fill(dotX - 3, dotY - 3, dotX + 3, dotY + 3, dotColor);
-
-            g.drawString(font, font.plainSubstrByWidth(type.name(), listW - 24), listX + 18, rowY + 4, TEXT, false);
-            String sub = inst.map(r -> r.members().size() + "/" + r.maxPlayers() + " · " + r.difficulty().label())
-                    .orElse("Fermé");
-            g.drawString(font, sub, listX + 18, rowY + 13, TEXT_DIM, false);
-            g.fill(listX + 4, rowY + ROW_H - 1, listX + listW - 4, rowY + ROW_H, BORDER);
+            // Nom en haut ; état discret en dessous (rien si fermé)
+            g.drawString(font, font.plainSubstrByWidth(type.name(), listW - 20), listX + 12, rowY + 7, TEXT, true);
+            if (inst.isPresent()) {
+                RaidInstance r = inst.get();
+                int color = switch (r.state()) {
+                    case OPEN -> r.isFull() ? RED : GREEN;
+                    case READY_CHECK -> ORANGE;
+                    case IN_PROGRESS -> RED;
+                };
+                g.drawString(font, r.members().size() + "/" + r.maxPlayers() + " · " + r.difficulty().label(),
+                        listX + 12, rowY + 17, color, false);
+            }
         }
     }
 
@@ -380,92 +365,75 @@ public class RaidScreen extends Screen {
         int y = cardY + PAD;
         int innerW = cardW - 2 * PAD;
 
-        // --- Grande image du boss, à gauche de la fiche ---
-        int imgX = x, imgY = y;
-        g.fill(imgX - 1, imgY - 1, imgX + IMG_SIZE + 1, imgY + IMG_SIZE + 1, BORDER);
-        ResourceLocation tex = bossTexture(type);
-        g.blit(tex, imgX, imgY, 0, 0, IMG_SIZE, IMG_SIZE, IMG_SIZE, IMG_SIZE);
-        // Bandeau "niveau" sous l'image
+        // Nom + boss
+        g.drawString(font, type.name(), x, y, TEXT, true);
         int lvl = diff.scaledLevel(type.baseLevel());
-        g.fill(imgX, imgY + IMG_SIZE - 12, imgX + IMG_SIZE, imgY + IMG_SIZE, 0xA0000000);
-        g.drawCenteredString(font, Component.translatable("screen.cobolmod.raids.boss", type.boss(), lvl),
-                imgX + IMG_SIZE / 2, imgY + IMG_SIZE - 10, TEXT);
+        g.drawString(font, Component.translatable("screen.cobolmod.raids.boss", type.boss(), lvl), x, y + 12, TEAL, false);
 
-        // --- Colonne d'infos à droite de l'image ---
-        int ix = imgX + IMG_SIZE + PAD;
-        int iw = cardX + cardW - PAD - ix;
-        int iy = y;
-
-        g.drawString(font, type.name(), ix, iy, TEXT, true);
-        iy += 12;
-
-        // Badge de difficulté cliquable
-        String label = diff.label().toUpperCase();
-        badgeW = font.width(label) + 14;
+        // Badge de difficulté, en haut à droite, cliquable avant ouverture (ou en admin)
+        String label = diff.label();
+        badgeW = font.width(label) + 12;
         badgeH = 12;
-        badgeX = ix;
-        badgeY = iy;
+        badgeX = x + innerW - badgeW;
+        badgeY = y - 1;
         boolean clickable = difficultyClickable();
         boolean hover = clickable && mouseX >= badgeX && mouseX < badgeX + badgeW && mouseY >= badgeY && mouseY < badgeY + badgeH;
         int badgeColor = 0xFF000000 | diff.color();
         g.fill(badgeX, badgeY, badgeX + badgeW, badgeY + badgeH, hover ? lighten(badgeColor) : badgeColor);
-        if (clickable) g.renderOutline(badgeX - 1, badgeY - 1, badgeW + 2, badgeH + 2, hover ? TEXT : BORDER);
-        g.drawString(font, label, badgeX + 4, badgeY + 2, 0xFF101010, false);
-        if (clickable) g.drawString(font, "↻", badgeX + badgeW - 9, badgeY + 2, 0xFF101010, false);
-        if (hover) {
-            g.renderTooltip(font, Component.translatable("screen.cobolmod.raids.difficulty.tip"), mouseX, mouseY);
+        g.drawString(font, label, badgeX + 6, badgeY + 2, 0xFF101010, false);
+        if (clickable) {
+            g.renderOutline(badgeX - 1, badgeY - 1, badgeW + 2, badgeH + 2, hover ? TEXT : BORDER);
+            if (hover) g.renderTooltip(font, Component.translatable("screen.cobolmod.raids.difficulty.tip"), mouseX, mouseY);
         }
-        iy += badgeH + 6;
 
-        // État + visibilité
+        // Trait de séparation
+        int sepY = y + 28;
+        g.fill(x, sepY, x + innerW, sepY + 2, SEPARATOR);
+
+        // Grande bannière du boss, pleine largeur, ratio 256:96
+        int bannerY = sepY + 8;
+        int bannerH = innerW * BANNER_TEX_H / BANNER_TEX_W;
+        int maxBannerH = (cardY + cardH - PAD - BTN_H - 18) - bannerY;
+        int bannerW = innerW;
+        if (bannerH > maxBannerH) {
+            bannerH = maxBannerH;
+            bannerW = bannerH * BANNER_TEX_W / BANNER_TEX_H;
+        }
+        int bannerX = x + (innerW - bannerW) / 2;
+        g.fill(bannerX - 1, bannerY - 1, bannerX + bannerW + 1, bannerY + bannerH + 1, 0xFF000000);
+        g.blit(bossTexture(type), bannerX, bannerY, bannerW, bannerH, 0, 0, BANNER_TEX_W, BANNER_TEX_H, BANNER_TEX_W, BANNER_TEX_H);
+
+        // Ligne d'état / équipe juste au-dessus des boutons
+        int infoY = cardY + cardH - PAD - BTN_H - 12;
         if (inst.isPresent()) {
             RaidInstance raid = inst.get();
-            Component state = Component.translatable("screen.cobolmod.raids.state." + raid.state().name().toLowerCase());
             int stateColor = switch (raid.state()) {
                 case OPEN -> GREEN;
                 case READY_CHECK -> ORANGE;
                 case IN_PROGRESS -> RED;
             };
-            g.drawString(font, state, ix, iy, stateColor, false);
-            Component vis = Component.translatable(raid.isPublic() ? "screen.cobolmod.raids.public" : "screen.cobolmod.raids.private");
-            g.drawString(font, vis, ix + iw - font.width(vis), iy, raid.isPublic() ? GREEN : ORANGE, false);
-            iy += 12;
-
-            // Équipe : nom + coche si prêt pendant un ready check
-            g.drawString(font, Component.translatable("screen.cobolmod.raids.team", raid.members().size(), raid.maxPlayers()),
-                    ix, iy, TEXT_DIM, false);
-            iy += 10;
+            Component state = Component.translatable("screen.cobolmod.raids.state." + raid.state().name().toLowerCase());
+            g.drawString(font, state, x, infoY, stateColor, false);
+            int tx = x + font.width(state) + 6;
+            g.drawString(font, "·", tx, infoY, TEXT_DIM, false);
+            tx += 8;
+            StringBuilder team = new StringBuilder();
             for (RaidInstance.RaidMember m : raid.members()) {
-                boolean isLeader = raid.isLeader(m.uuid());
-                String line = (isLeader ? "★ " : "• ") + m.name();
-                int color = m.uuid().equals(me()) ? TEXT : TEXT_DIM;
-                g.drawString(font, font.plainSubstrByWidth(line, iw - 12), ix + 2, iy, color, false);
-                if (raid.state() == RaidInstance.State.READY_CHECK) {
-                    boolean ready = raid.isReady(m.uuid());
-                    g.drawString(font, ready ? "✔" : "…", ix + iw - 8, iy, ready ? GREEN : ORANGE, false);
-                }
-                iy += 10;
+                if (team.length() > 0) team.append(", ");
+                if (raid.isLeader(m.uuid())) team.append("★");
+                team.append(m.name());
+                if (raid.state() == RaidInstance.State.READY_CHECK) team.append(raid.isReady(m.uuid()) ? "✔" : "…");
             }
-            for (int i = raid.members().size(); i < raid.maxPlayers(); i++) {
-                g.drawString(font, "• —", ix + 2, iy, 0xFF4A5468, false);
-                iy += 10;
-            }
+            String right = (raid.isPublic() ? "" : "Privé · ") + raid.members().size() + "/" + raid.maxPlayers();
+            int rightW = font.width(right);
+            g.drawString(font, font.plainSubstrByWidth(team.toString(), x + innerW - rightW - 6 - tx), tx, infoY, TEXT_DIM, false);
+            g.drawString(font, right, x + innerW - rightW, infoY, raid.isPublic() ? TEXT_DIM : ORANGE, false);
         } else {
-            g.drawString(font, Component.translatable("screen.cobolmod.raids.state.closed"), ix, iy, TEXT_DIM, false);
-            iy += 12;
-            List<FormattedCharSequence> lines = font.split(Component.literal(type.description()), iw);
-            for (int i = 0; i < Math.min(lines.size(), 4); i++) {
-                g.drawString(font, lines.get(i), ix, iy, TEXT_DIM, false);
-                iy += 10;
+            g.drawString(font, Component.translatable("screen.cobolmod.raids.state.closed"), x, infoY, TEXT_DIM, false);
+            if (tab == Tab.ADMIN) {
+                Component hint = Component.translatable("screen.cobolmod.raids.admin.hint");
+                g.drawString(font, hint, x + innerW - font.width(hint), infoY, ORANGE, false);
             }
-        }
-
-        // Séparateur au-dessus des boutons
-        int sepY = cardY + cardH - PAD - BTN_H - 6;
-        g.fill(x, sepY, x + innerW, sepY + 1, BORDER);
-
-        if (tab == Tab.ADMIN) {
-            g.drawString(font, Component.translatable("screen.cobolmod.raids.admin.hint"), x, sepY - 10, ORANGE, false);
         }
     }
 

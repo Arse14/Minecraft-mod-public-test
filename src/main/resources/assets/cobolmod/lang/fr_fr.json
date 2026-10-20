@@ -20,8 +20,7 @@
   "screen.cobolmod.raids.private": "Privé",
   "screen.cobolmod.raids.admin.make_private": "Passer en privé",
   "screen.cobolmod.raids.admin.make_public": "Passer en public",
-  "screen.cobolmod.raids.admin.hint": "Mode admin : clic sur la difficulté pour la changer",
-  "screen.cobolmod.raids.open": "Ouvrir le raid",
+  "screen.cobolmod.raids.admin.hint": "Admin : clic sur la difficulté pour la changer",
   "screen.cobolmod.raids.leave": "Quitter",
   "screen.cobolmod.raids.disband": "Dissoudre",
   "screen.cobolmod.raids.teleport.tip": "Lance un ready check : l'équipe est téléportée quand tout le monde est prêt",
@@ -60,5 +59,7 @@
   "raid.cobolmod.player_ready": "%s est prêt (%s/%s).",
   "raid.cobolmod.ready_check_cancelled": "Ready check annulé (%s).",
   "raid.cobolmod.teleported": "Équipe téléportée au %s. Boss niveau %s. Bonne chance !",
-  "raid.cobolmod.closed": "Le raid est terminé."
+  "raid.cobolmod.closed": "Le raid est terminé.",
+  "screen.cobolmod.raids.create": "Créer",
+  "screen.cobolmod.raids.already_open": "Une instance est déjà ouverte"
 }
