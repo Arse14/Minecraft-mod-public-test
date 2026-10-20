@@ -6,15 +6,15 @@
 modLoader="javafml" #obligatoire
 loaderVersion="${loader_version_range}" #obligatoire
 license="${mod_license}"
-issueTrackerURL="https://github.com/quentinleduc1-netizen/Minecraft-mod-public-test/issues" #optionnel
+issueTrackerURL="https://github.com/Arse14/Minecraft-mod-public-test/issues" #optionnel
 
 [[mods]] #obligatoire
 modId="${mod_id}" #obligatoire
 version="${mod_version}" #obligatoire
 displayName="${mod_name}" #obligatoire
-displayURL="https://github.com/quentinleduc1-netizen/Minecraft-mod-public-test" #optionnel
+displayURL="https://github.com/Arse14/Minecraft-mod-public-test" #optionnel
 #logoFile="cobolmod.png" #optionnel
-authors="quentinleduc1-netizen"
+authors="Arse14"
 description='''
 Ellyzhia - mod NeoForge pour Minecraft 1.21.1.
 '''
